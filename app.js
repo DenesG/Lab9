@@ -14,6 +14,8 @@ const {
   PokemonNoSuchRouteError
 } = require("./errors.js")
 
+const secret = require("crypto").randomBytes(64).toString("hex");
+
 const { asyncWrapper } = require("./asyncWrapper.js")
 
 const userModel = require("./userModel.js")
@@ -22,19 +24,21 @@ const app = express()
 
 const dotenv = require("dotenv")
 dotenv.config();
+const port = 5000
 
 var pokeModel = null;
+
 
 const start = asyncWrapper(async () => {
   await connectDB();
   const pokeSchema = await getTypes();
   pokeModel = await populatePokemons(pokeSchema);
 
-  app.listen(process.env.PORT, (err) => {
+  app.listen(port, (err) => {
     if (err)
       throw new PokemonDbError(err)
     else
-      console.log(`Phew! Server is running on port: ${process.env.PORT}`);
+      console.log(`Phew! Server is running on port: ${port}`);
   })
 })
 start()
@@ -65,7 +69,7 @@ app.post('/login', asyncWrapper(async (req, res) => {
   }
 
   // Create and assign a token
-  const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET)
+  const token = jwt.sign({ _id: user._id }, secret)
   res.header('auth-token', token)
 
   res.send(user)
@@ -77,7 +81,7 @@ const auth = (req, res, next) => {
     throw new PokemonBadRequest("Access denied")
   }
   try {
-    const verified = jwt.verify(token, process.env.TOKEN_SECRET) // nothing happens if token is valid
+    const verified = jwt.verify(token, secret) // nothing happens if token is valid
     next()
   } catch (err) {
     throw new PokemonBadRequest("Invalid token")
