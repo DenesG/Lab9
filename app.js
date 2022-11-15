@@ -20,6 +20,9 @@ const userModel = require("./userModel.js")
 
 const app = express()
 
+const dotenv = require("dotenv")
+dotenv.config();
+
 var pokeModel = null;
 
 const start = asyncWrapper(async () => {
@@ -45,5 +48,25 @@ app.post('/register', asyncWrapper(async (req, res) => {
   const userWithHashedPassword = { ...req.body, password: hashedPassword }
 
   const user = await userModel.create(userWithHashedPassword)
+  res.send(user)
+}))
+
+
+const jwt = require("jsonwebtoken")
+app.post('/login', asyncWrapper(async (req, res) => {
+  const { username, password } = req.body
+  const user = await userModel.findOne({ username })
+  if (!user) {
+    throw new PokemonBadRequest("User not found")
+  }
+  const isPasswordCorrect = await bcrypt.compare(password, user.password)
+  if (!isPasswordCorrect) {
+    throw new PokemonBadRequest("Password is incorrect")
+  }
+
+  // Create and assign a token
+  const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET)
+  res.header('auth-token', token)
+
   res.send(user)
 }))
