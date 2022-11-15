@@ -13,3 +13,11 @@ const {
   PokemonDuplicateError,
   PokemonNoSuchRouteError
 } = require("./errors.js")
+
+const { asyncWrapper } = require("./asyncWrapper.js")
+
+const userModel = require("./userModel.js")
+
+const app = express()
+
+var pokeModel = null;
